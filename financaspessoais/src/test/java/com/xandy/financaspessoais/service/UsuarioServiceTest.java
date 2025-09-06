@@ -1,6 +1,7 @@
-package com.xandy.financaspessoais.model.repository;
+package com.xandy.financaspessoais.service;
 
-import org.assertj.core.api.Assertions;
+
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -8,45 +9,42 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
+import com.xandy.financaspessoais.exception.RegraNegocioException;
 import com.xandy.financaspessoais.model.entity.Usuario;
+import com.xandy.financaspessoais.model.repository.UsuarioRepository;
 
 @ExtendWith(SpringExtension.class)
 @SpringBootTest
 @ActiveProfiles("test")
-public class UsuarioRepositoryTest {
+public class UsuarioServiceTest {
+	
+	@Autowired
+	UsuarioService service;
 	
 	@Autowired
 	UsuarioRepository repository;
 	
 	@Test
-	public void deveVerificarAExistenciaDeUmEmail() {
+	public void deveValidarEmail() {
+		//cenário
+		repository.deleteAll();
+		
+		//ação
+		service.validarEmail("alexandre@fatec.com.br");
+	}
+	
+	@Test
+	public void deveLancarErroAoValidarEmailQuandoExistirEmailCadastrado() {
 		//cenário
 		Usuario usuario = Usuario
 				.builder()
 				.nome("Alexandre")
 				.email("alexandre@fatec.com.br")
-				.senha("1234")
 				.build();
 		repository.save(usuario);
 		
-		//ação/execução
-		boolean result = repository.existsByEmail("alexandre@fatec.com.br");
-		
-		
-		//verificação
-		Assertions.assertThat(result).isTrue();
-	}
-
-	@Test
-	public void deveRetornarFalsoQuandoNaoHouverUsuarioCadastradoComOEmail() {
-		//cenário
-		repository.deleteAll();
-		
-		//ação/execução
-		boolean result = repository.existsByEmail("alexandre@fatec.com.br");
-		
-		//verificação
-		Assertions.assertThat(result).isFalse();
-		
+		//ação
+		Assertions.assertThrows(RegraNegocioException.class,
+				() -> service.validarEmail("alexandre@fatec.com.br"));
 	}
 }
